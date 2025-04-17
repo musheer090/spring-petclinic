@@ -1,16 +1,23 @@
-# Use an official OpenJDK runtime as a parent image (Java 17 as required by Petclinic)
-FROM eclipse-temurin:17-jre-alpine
+# Multistage Process
 
-# Set the working directory inside the container
+# Stage 1: Artifact Source Stage
+# Define an intermediate stage (using the minimal 'scratch' image)
+# solely to hold the application JAR copied from the build context.
+FROM scratch AS artifact_source
 WORKDIR /app
-
-# Copy the executable jar file built by Maven into the container
-# The buildspec runs 'mvn package', which creates the jar in the 'target' directory.
-# Using a wildcard (*) accommodates version number changes in the jar filename.
+# Copy the JAR built externally by 'mvn package' (in CodeBuild) into this stage
 COPY target/spring-petclinic*.jar app.jar
 
-# Make port 8080 available to the world outside this container (standard Spring Boot port)
+# Stage 2: Final Runtime Stage
+# Use the lean JRE Alpine image for running the application
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+
+# Copy *only* the application JAR from the intermediate artifact_source stage
+COPY --from=artifact_source /app/app.jar /app/app.jar
+
+# Expose the application port
 EXPOSE 8080
 
-# Define the command to run the application when the container launches
+# Define the command to run the application
 ENTRYPOINT ["java","-jar","/app/app.jar"]
