@@ -10,7 +10,8 @@ COPY target/spring-petclinic*.jar app.jar
 
 # Stage 2: Final Runtime Stage
 # Use the lean JRE Alpine image for running the application
-FROM eclipse-temurin:17-jre-alpine
+# --- MODIFIED LINE BELOW ---
+FROM public.ecr.aws/docker/library/eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
 # Copy *only* the application JAR from the intermediate artifact_source stage
